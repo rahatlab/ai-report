@@ -31,12 +31,29 @@ const PALETTE = [
 ];
 
 function fmt(n) {
-  if (typeof n !== "number") return n;
+  if (typeof n !== "number" || !Number.isFinite(n)) return n;
   const a = Math.abs(n);
+  if (a === 0) return "0";
+  if (a >= 1e12) return String(Math.round((n / 1e12) * 10) / 10) + "T";
   if (a >= 1e9) return (n / 1e9).toFixed(1) + "B";
   if (a >= 1e6) return (n / 1e6).toFixed(1) + "M";
   if (a >= 1e3) return (n / 1e3).toFixed(1) + "k";
-  return Number.isInteger(n) ? n : n.toFixed(1);
+  if (a >= 1) return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100);
+  if (a >= 0.001) return String(Math.round(n * 10000) / 10000);
+  return n.toExponential(1);
+}
+
+// x label lambho/onek hole ghuriye dekhao, na hole sidho
+function xTicks(d, xKey) {
+  const long = d.length > 7 || d.some((o) => String(o?.[xKey] ?? "").length > 9);
+  return long
+    ? { angle: -30, height: 64, anchor: "end", interval: d.length <= 16 ? 0 : "preserveStartEnd" }
+    : { angle: 0, height: 40, anchor: "middle", interval: "preserveStartEnd" };
+}
+
+// metric naam diye tooltip (shudhu "value" na)
+function tipName(chart, fallback) {
+  return chart.metric || fallback;
 }
 
 function ChartBody({ chart, dark }) {
@@ -51,6 +68,7 @@ function ChartBody({ chart, dark }) {
   };
   const axis = { fill: tick, fontSize: 11 };
   const d = chart.data || [];
+  const xt = xTicks(d, chart.xKey);
 
   if (chart.type === "line") {
     return (
@@ -60,14 +78,17 @@ function ChartBody({ chart, dark }) {
           <XAxis
             dataKey={chart.xKey}
             tick={axis}
-            angle={-28}
-            textAnchor="end"
-            height={64}
-            interval="preserveStartEnd"
+            angle={xt.angle}
+            textAnchor={xt.anchor}
+            height={xt.height}
+            interval={xt.interval}
             minTickGap={12}
           />
           <YAxis tick={axis} tickFormatter={fmt} width={54} />
-          <Tooltip contentStyle={tipStyle} formatter={fmt} />
+          <Tooltip
+            contentStyle={tipStyle}
+            formatter={(value, name) => [fmt(value), tipName(chart, name)]}
+          />
           <Line
             type="monotone"
             dataKey={chart.yKey}
@@ -129,7 +150,13 @@ function ChartBody({ chart, dark }) {
               <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
             ))}
           </Pie>
-          <Tooltip contentStyle={tipStyle} formatter={fmt} />
+          <Tooltip
+            contentStyle={tipStyle}
+            formatter={(value, name, item) => {
+              const pct = item?.payload?.pct;
+              return [`${fmt(value)}${pct != null ? ` (${pct}%)` : ""}`, name];
+            }}
+          />
           <Legend
             verticalAlign="bottom"
             height={34}
@@ -140,26 +167,31 @@ function ChartBody({ chart, dark }) {
     );
   }
 
-  // bar (default)
+  // bar (default) — histogram hole bucket gulo tight (compact), na hole gap
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={d} margin={{ top: 8, right: 12, left: -6, bottom: 4 }}>
+      <BarChart
+        data={d}
+        margin={{ top: 8, right: 12, left: -6, bottom: 4 }}
+        barGap={0}
+        barCategoryGap={chart.compact ? "2%" : "14%"}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
         <XAxis
           dataKey={chart.xKey}
           tick={axis}
-          angle={-28}
-          textAnchor="end"
-          height={64}
-          interval={0}
+          angle={xt.angle}
+          textAnchor={xt.anchor}
+          height={xt.height}
+          interval={xt.interval}
         />
         <YAxis tick={axis} tickFormatter={fmt} width={54} />
         <Tooltip
           contentStyle={tipStyle}
           cursor={{ fill: dark ? "#33415533" : "#00000010" }}
-          formatter={fmt}
+          formatter={(value, name) => [fmt(value), tipName(chart, name)]}
         />
-        <Bar dataKey={chart.yKey} fill="#6366f1" radius={[6, 6, 0, 0]} maxBarSize={64} />
+        <Bar dataKey={chart.yKey} fill="#6366f1" radius={chart.compact ? [3, 3, 0, 0] : [6, 6, 0, 0]} maxBarSize={64} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -167,13 +199,14 @@ function ChartBody({ chart, dark }) {
 
 function ChartCard({ chart, dark }) {
   const typeLabel =
-    chart.type === "line"
+    chart.badge ||
+    (chart.type === "line"
       ? "Line"
       : chart.type === "pie"
       ? "Donut"
       : chart.type === "scatter"
       ? "Scatter"
-      : "Bar";
+      : "Bar");
 
   return (
     <div className="print-full print-break rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
