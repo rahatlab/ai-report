@@ -1,6 +1,6 @@
 # 📊 AI CSV Report
 
-CSV upload koro → **AI report + chart + statistics + data table** ek sathe paiye jao.
+CSV / Excel upload koro → **AI report + chart + statistics + data table** ek sathe paiye jao.
 Dark/Light mode, fully responsive, password-protected.
 
 **Stack:** Next.js 16 (App Router) · Tailwind CSS 4 · Recharts · Gemini / Groq (free AI)
@@ -9,6 +9,7 @@ Dark/Light mode, fully responsive, password-protected.
 
 ## ✨ Features
 
+- 📄 CSV `.csv` **and** Excel `.xlsx` — duitai support
 - 🔐 Password login (`.env` theke set hoy, default `0000`)
 - 🌓 Dark / Light mode switch (localStorage-e save hoy)
 - 📱 Fully responsive (mobile → desktop)
@@ -143,6 +144,7 @@ ai_report/
 ├── lib/
 │   ├── auth.js             # HMAC signed cookie (Web Crypto)
 │   ├── csv.js              # parse + type detect + stats
+│   ├── excel.js            # .xlsx parse (exceljs, first sheet)
 │   ├── charts.js           # auto chart builder (AI-independent)
 │   ├── analyze.js          # shared analyze pipeline
 │   └── ai.js               # Gemini + Groq (provider switch)
@@ -163,7 +165,9 @@ ai_report/
 ## 🧪 Testing
 
 - **Sample CSV** diye ek click-e test koro (upload zone-e button ache)
-- CSV limit: ~3MB, 10,000 row analyze hoy (table-e 2000 porjonto dekhay)
+- `.xlsx` / `.xlsm` file o drop korte parbe (first worksheet use hoy)
+- Purano `.xls` support na — `.xlsx` ba CSV te save koro
+- File limit: ~3MB, 10,000 row analyze hoy (table-e 2000 porjonto dekhay)
 
 ---
 
