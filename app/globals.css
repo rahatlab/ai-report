@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/* class-based dark mode (html.dark) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* slim scrollbar for tables */
+.thin-scroll::-webkit-scrollbar {
+  height: 9px;
+  width: 9px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184 / 0.55);
+  border-radius: 9999px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* dropzone dashed animation */
+.dropzone-active {
+  border-color: rgb(99 102 241) !important;
+  background-color: rgb(99 102 241 / 0.08);
+}
+
+/* loading skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(148 163 184 / 0.15) 25%,
+    rgb(148 163 184 / 0.3) 37%,
+    rgb(148 163 184 / 0.15) 63%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ---------- print / PDF ---------- */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  .print-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .print-full {
+    box-shadow: none !important;
+  }
+}
