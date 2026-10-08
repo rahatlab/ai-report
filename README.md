@@ -90,7 +90,7 @@ Shudhu ekta key thakle sheitai automatic use hobe.
 | `SESSION_SECRET` | Random string (session sign) | dev default |
 | `AI_PROVIDER` | `gemini` ya `groq` | `gemini` |
 | `GEMINI_API_KEY` | Gemini free key | — |
-| `GEMINI_MODEL` | Gemini model | `gemini-2.5-flash` |
+| `GEMINI_MODEL` | Gemini model | `gemini-3.5-flash` |
 | `GROQ_API_KEY` | Groq free key | — |
 | `GROQ_MODEL` | Groq model | `openai/gpt-oss-120b` |
 | `REPORT_LANG` | `en` ya `bn` (Bangla report) | `en` |
@@ -172,6 +172,8 @@ ai_report/
 | Somossa | Solution |
 |---|---|
 | "No AI key set" dekhacche | `.env.local` e `GEMINI_API_KEY` boshao, server restart |
+| `404 model no longer available` | `.env.local` e `GEMINI_MODEL=gemini-3.5-flash` (notun/preview model notun users-er jonno bondho thake) |
+| `503 high demand` | Gemini free tier overload — code nijei alternate model try kore; abar click koro |
 | AI report ashe ni | Key valid kina dekho; rate limit hoite pare |
 | Bangla report chao | `.env.local` e `REPORT_LANG=bn` |
 | Port occupied | `set PORT=3001 && npm start` |

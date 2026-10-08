@@ -12,15 +12,6 @@ import DataTable from "./DataTable";
 
 const MAX_BYTES = 3_000_000;
 
-function readFile(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result || ""));
-    r.onerror = () => reject(new Error("File pora jay ni"));
-    r.readAsText(file);
-  });
-}
-
 function IconBtn({ onClick, title, children, className = "" }) {
   return (
     <button
@@ -51,20 +42,13 @@ export default function Dashboard() {
   async function handleFile(file) {
     if (!file) return;
     if (file.size > MAX_BYTES) {
-      setError("File onek boro — max ~3MB CSV diye submit koro.");
+      setError("File onek boro — max ~3MB diye submit koro.");
       return;
     }
-    let text;
-    try {
-      text = await readFile(file);
-    } catch (e) {
-      setError(e.message || "File pora jay ni");
-      return;
-    }
-    runAnalysis(text, file.name || "upload.csv");
+    runAnalysis(file, file.name || "upload.csv");
   }
 
-  function runAnalysis(csv, name) {
+  function runAnalysis(file, name) {
     setFileName(name);
     setData(null);
     setAi(null);
@@ -73,14 +57,20 @@ export default function Dashboard() {
     setLoading(true);
     setAiLoading(true);
 
-    const body = JSON.stringify({ csv, fileName: name });
-    const opts = {
+    const isExcel = /\.(xlsx|xlsm|xls)$/i.test(name);
+    const makeOpts = () => ({
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    };
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "x-file-name": encodeURIComponent(name),
+        "x-file-type": isExcel ? "excel" : "csv",
+      },
+    });
 
-    fetch("/api/analyze", opts)
+    // ArrayBuffer fetch-e consume hoy — tai priti request-e notun read
+    file
+      .arrayBuffer()
+      .then((buf) => fetch("/api/analyze", { ...makeOpts(), body: buf }))
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || "Analyze failed");
@@ -89,7 +79,9 @@ export default function Dashboard() {
       .catch((e) => setError(e.message || "Analyze failed"))
       .finally(() => setLoading(false));
 
-    fetch("/api/insight", opts)
+    file
+      .arrayBuffer()
+      .then((buf) => fetch("/api/insight", { ...makeOpts(), body: buf }))
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || "AI report failed");

@@ -76,10 +76,19 @@ export default function AIInsight({ ai, loading, error }) {
 
         {!error && !loading && ai && !ai.available && (
           <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-            AI key set hoyni — <code className="font-mono">.env.local</code> te{" "}
-            <code className="font-mono">GEMINI_API_KEY</code> ba{" "}
-            <code className="font-mono">GROQ_API_KEY</code> boshao.{" "}
-            <span className="opacity-70">({ai.reason})</span>
+            {ai.reason && ai.reason.startsWith("No AI key set") ? (
+              <>
+                AI key set hoyni — <code className="font-mono">.env.local</code> te{" "}
+                <code className="font-mono">GEMINI_API_KEY</code> ba{" "}
+                <code className="font-mono">GROQ_API_KEY</code> boshao, tarpor server
+                restart koro.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold">AI report generate hoy ni.</span>{" "}
+                <span className="opacity-80">({ai.reason})</span>
+              </>
+            )}
           </div>
         )}
 

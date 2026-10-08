@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { COOKIE_NAME, verifySessionToken } from "@/lib/auth";
-import { analyzeCSV, CsvError } from "@/lib/analyze";
+import { analyzeFile, CsvError } from "@/lib/analyze";
 import { providerStatus } from "@/lib/ai";
 
 export const maxDuration = 30;
@@ -18,15 +18,16 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body = {};
   try {
-    body = await request.json();
-  } catch {
-    body = {};
-  }
+    const fileName = decodeURIComponent(request.headers.get("x-file-name") || "upload.csv");
+    const fileType =
+      (request.headers.get("x-file-type") || "csv").toLowerCase() === "excel"
+        ? "excel"
+        : "csv";
 
-  try {
-    const { parsed, profiles, overview, charts } = analyzeCSV(body.csv);
+    const buffer = Buffer.from(await request.arrayBuffer());
+
+    const { parsed, profiles, overview, charts } = await analyzeFile(buffer, fileType);
 
     const shown = parsed.rows.slice(0, TABLE_CAP);
     const table = {
@@ -38,7 +39,8 @@ export async function POST(request) {
 
     return NextResponse.json({
       meta: {
-        fileName: body.fileName || "upload.csv",
+        fileName,
+        fileType,
         generatedAt: new Date().toISOString(),
         provider: providerStatus().active,
       },
@@ -50,7 +52,7 @@ export async function POST(request) {
   } catch (e) {
     const status = e instanceof CsvError ? e.status : 500;
     return NextResponse.json(
-      { error: e?.message || "CSV analyze korate somossa hoy" },
+      { error: e?.message || "File analyze korate somossa hoy" },
       { status }
     );
   }

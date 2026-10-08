@@ -60,7 +60,7 @@ export default function UploadZone({ onFile, loading, error }) {
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.xlsx,.xlsm,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           className="hidden"
           onChange={(e) => take(e.target.files)}
         />
@@ -80,10 +80,10 @@ export default function UploadZone({ onFile, loading, error }) {
         </div>
 
         <h2 className="text-lg font-semibold sm:text-xl">
-          {loading ? "Analyzing..." : "CSV file drop koro / click koro"}
+          {loading ? "Analyzing..." : "CSV / Excel file drop koro / click koro"}
         </h2>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Max ~3MB · header row lagbe
+          .csv · .xlsx — Max ~3MB, header row lagbe
         </p>
 
         <button

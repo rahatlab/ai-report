@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { COOKIE_NAME, verifySessionToken } from "@/lib/auth";
-import { analyzeCSV, CsvError } from "@/lib/analyze";
+import { analyzeFile, CsvError } from "@/lib/analyze";
 import { generateAIReport } from "@/lib/ai";
 
 export const maxDuration = 60;
@@ -17,16 +17,16 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body = {};
   try {
-    body = await request.json();
-  } catch {
-    body = {};
-  }
+    const fileType =
+      (request.headers.get("x-file-type") || "csv").toLowerCase() === "excel"
+        ? "excel"
+        : "csv";
 
-  try {
-    const { profiles, overview, parsed } = analyzeCSV(body.csv);
-    const ai = await generateAIReport(overview, profiles, parsed.rows, body.provider);
+    const buffer = Buffer.from(await request.arrayBuffer());
+    const { profiles, overview, parsed } = await analyzeFile(buffer, fileType);
+
+    const ai = await generateAIReport(overview, profiles, parsed.rows);
     return NextResponse.json({ ai });
   } catch (e) {
     const status = e instanceof CsvError ? e.status : 500;
